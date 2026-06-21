@@ -1,0 +1,178 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage[margin=1in]{geometry}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\title{GroundClock: Measuring Whether Language Models Use the Current Time They Are Given}
+\author{Thamilvendhan Munirathinam\\ Independent Researcher\\
+\texttt{mthamil107@gmail.com} \quad \url{https://github.com/mthamil107}}
+\date{June 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Large language models are stateless and frozen at training time: they have no clock and cannot
+know the current date. In deployment, applications supply the date by injecting it into the
+system prompt on every request, and some additionally expose a clock as a callable tool. A growing
+body of work shows that this injection is necessary but not sufficient---even when the current time
+is present in context, models frequently fail to \emph{use} it. We introduce \textbf{GroundClock},
+a small, provider-agnostic reference layer that supplies a consistent, timezone-aware,
+provenance-tagged notion of ``now'' through both a system-prompt block and a \texttt{get\_current\_time}
+tool drawn from a single clock, and \textbf{NowBench}, a benchmark whose every gold item has an
+answer derivable \emph{only} from the injected instant---so a correct answer is direct evidence the
+model used the clock rather than its training-era prior. NowBench scores \emph{alignment} (did it
+use the injected time), \emph{usage rate}, cross-turn \emph{consistency}, and, via deliberate
+no-match probes, \emph{calibration}. Across four OpenAI models spanning two generations, injecting
+the time raises alignment sharply, yet using it correctly for timezone reasoning remains a failure
+that is \emph{non-monotonic} in model tier (a small model beats two larger ones), and calibration is
+\emph{uniformly absent}---no model abstains when given no clock; a callable clock tool nearly closes
+the gap. The contribution is not a new algorithm---date injection, tool
+use, and timezone arithmetic are all standard---it is the pairing of a now-provisioning layer with a
+benchmark that measures whether the injected time is actually \emph{used}, which prior work has not
+shipped jointly.
+\end{abstract}
+
+\section{Introduction}
+A recurring confusion among practitioners is that a language model ``secretly tracks'' the date. It
+does not. The model is a fixed function of its weights; each API call is independent and carries no
+clock or cross-call memory. The appearance of date awareness comes entirely from the application
+layer: products such as Claude and ChatGPT inject the current date, time, and timezone into the
+system prompt on every request \cite{anthropic_sysprompt,gpt55leak,willison_claude4}, holding the
+model's training \emph{knowledge cutoff} as a separate, fixed value. The research question is thus
+not ``does the model know the date'' but \textbf{``does the model use the date it was given?''}
+
+This distinction matters because the second question has an uncomfortable answer. Recent studies
+report that models often ignore injected temporal information \cite{span2025,blindness2025}: across
+agentic traces, timestamps appear in a small fraction of reasoning steps, and time-conditioned
+behaviors improve only modestly when the time is injected rather than inferred. We call this
+\textbf{temporal blindness}: the gap between \emph{having} the current time and \emph{using} it.
+
+\paragraph{Contributions.}
+\textbf{C1}~A framing separating the model's absent clock, its fixed cutoff, and per-request time
+injection, identifying \emph{use of injected time} as the property of interest.
+\textbf{C2}~\textbf{GroundClock}, a reference layer exposing one clock through a system-prompt block
+and a \texttt{get\_current\_time} tool, with a structured, timezone-aware, provenance-tagged context
+object and a published JSON Schema.
+\textbf{C3}~\textbf{NowBench}, five task families in which every gold item is answerable only from
+the injected instant.
+\textbf{C4}~A \emph{calibration} protocol: no-match probes scored separately so the headline is
+honest.
+\textbf{C5}~A reproducible harness with a frozen-clock mode, a deterministic offline mock, and a
+runnable Claude (\texttt{claude-opus-4-8}) backend.
+
+\section{Background}
+\textbf{Models are stateless and frozen.} Weights do not change after training; a call retains
+nothing from a prior call, so the model has no inherent ``now''. \textbf{Knowledge cutoff is not a
+clock,} and reported cutoffs are unreliable---effective cutoffs vary by topic
+\cite{cheng2024dated}. \textbf{Date is supplied by injection} \cite{anthropic_sysprompt,gpt55leak}.
+\textbf{Temporal reasoning is hard}: TimeQA \cite{chen2021timeqa}, TempReason
+\cite{tan2023tempreason}, present-anchored QA \cite{patqa2025}, and cross-calendar reasoning
+\cite{span2025} report large gaps to humans, but measure \emph{knowledge}, not \emph{use} of an
+injected now.
+
+\section{GroundClock and NowBench}
+\paragraph{Temporal context object.} Fields: \texttt{instant} (UTC, RFC 3339), \texttt{timezone}
+(IANA), \texttt{local\_time}, \texttt{utc\_offset} (DST-correct), \texttt{weekday}, \texttt{sequence}
+(monotonic per session), \texttt{provenance}, and optional \texttt{knowledge\_cutoff}. Invariants:
+(i)~\texttt{local\_time} converts to \texttt{instant}; (ii)~\texttt{sequence} is non-decreasing, so
+drift is detectable.
+
+\paragraph{Two surfaces, one clock.} The object renders to a deterministic
+\texttt{<temporal\_context>} block and backs a \texttt{get\_current\_time} tool from the same
+\texttt{Clock}, so they never disagree; a \texttt{FrozenClock} makes runs reproducible.
+
+\paragraph{Families and conditions.} \emph{present\_date}, \emph{timezone\_now}, \emph{relative\_date},
+\emph{deadline}, \emph{consistency}. Conditions: \emph{baseline} (no time), \emph{grounded} (block),
+\emph{tool} (block + tool). \textbf{Metrics:} alignment (correct/gold), usage rate, consistency, and
+\textbf{calibration} on no-match probes---scored separately and never folded into alignment.
+
+\section{Evaluation}
+\paragraph{Offline harness.} A deterministic mock parameterized by a \emph{compliance} rate (the
+fraction of items on which it uses an available clock, abstaining when none is present) validates
+the plumbing. At \texttt{compliance}~$=1.0$:
+
+\begin{center}
+\begin{tabular}{lrrrrr}
+\toprule
+condition & alignment & usage & consistency & calibration & tool calls \\
+\midrule
+baseline & 0\% & 0\% & 0\% & 100\% & 0 \\
+grounded & 100\% & 100\% & 100\% & 100\% & 0 \\
+tool & 100\% & 100\% & 100\% & 100\% & 24 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent (20 gold items; calibration on 3 no-match probes, excluded from alignment.) Lower
+compliance reproduces partial blindness. The scientific result is the \emph{real} run.
+
+\paragraph{Real run: four OpenAI models.} We evaluate four models across two generations and a
+range of sizes under the three conditions; the knowledge-cutoff field is omitted to avoid asserting
+an inaccurate value. We report alignment by condition plus two diagnostics: grounded
+\texttt{timezone\_now} alignment and probe calibration.
+
+\begin{center}
+\begin{tabular}{lrrrrr}
+\toprule
+model & baseline & grounded & tool & tz\_now (grnd) & calibration \\
+\midrule
+gpt-4o-mini & 0.10 & 0.95 & 1.00 & 0.75 & 0.00 \\
+gpt-4.1 & 0.10 & 0.85 & 0.90 & 0.25 & 0.00 \\
+gpt-5.1 & 0.15 & 0.85 & 1.00 & 0.25 & 0.00 \\
+gpt-5.5 & 0.15 & 1.00 & 1.00 & 1.00 & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent (20 gold items; calibration on 3 no-match probes; grounded consistency is $1.00$ for all
+four.) \textbf{Findings:} (1)~no model knows ``now'' (baseline $0.10$--$0.15$), and injection lifts
+all of them (grounded $0.85$--$1.00$); (2)~the residual failure is timezone reasoning and it is
+\emph{non-monotonic in tier}---\texttt{timezone\_now} ranges $0.25$--$1.00$, and the smallest model
+(gpt-4o-mini, $0.75$) beats two larger/newer ones; (3)~the \texttt{get\_current\_time} tool nearly
+closes the gap (tool $1.00$ for three of four; $0.90$ for gpt-4.1) \cite{span2025}; (4)~\textbf{
+calibration is $0$ for every model}---on no-clock probes none ever abstains, each confabulating a
+date in all cases. \textbf{Caveats:} four models, small suite; we cannot fully exclude provider-side
+date injection, but failing frozen-date items and confabulating probes are consistent with none.
+Reproduce: \texttt{nowbench run --provider openai --model <id>}.
+
+\section{Threat Model (condensed)}
+The authoritative time source is the host \texttt{Clock}; anything read from the conversation is
+untrusted as a time source. Key threats: time spoofing via prompt injection (CWE-345), mitigated by
+\texttt{provenance} and the consistency metric; timezone confusion (CWE-697), mitigated by the
+local$=$UTC invariant and DST-correct offsets; stale/replayed now (CWE-294 analog), mitigated by the
+monotonic \texttt{sequence}. Clock-source compromise is delegated to host hardening.
+
+\section{Related Work}
+Temporal-knowledge benchmarks \cite{chen2021timeqa,tan2023tempreason,patqa2025,span2025} measure
+what models know; ``Dated Data'' \cite{cheng2024dated} shows reported cutoffs are unreliable;
+temporal-blindness studies \cite{span2025,blindness2025} show injected time is under-used.
+GroundClock is complementary: it assumes injection and tools exist and supplies the missing
+piece---a benchmark scoring whether the injected time is \emph{used}, plus a reference layer.
+
+\section{Discussion and Future Work}
+NowBench v0 is small and deterministic. Planned: adversarial ``fake-now'' probes, timestamp-usage
+detection in reasoning traces, multi-turn agent traces, and additional providers for a cross-model
+leaderboard. The durable artifact is the \emph{protocol}---usage and calibration reported
+together---not any single number.
+
+\section{Conclusion}
+The premise that a model ``tracks'' the date misreads a real phenomenon: the date is supplied
+externally, every request, and is often not used. GroundClock supplies it consistently through one
+clock and two surfaces; NowBench measures whether it is used, honestly. The contribution is not a
+new algorithm but a benchmark-and-reference pairing that turns temporal blindness into a number you
+can track.
+
+\bibliographystyle{plain}
+\bibliography{groundclock}
+
+\end{document}

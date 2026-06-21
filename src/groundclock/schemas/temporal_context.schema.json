@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/groundclock/groundclock/schemas/temporal_context.schema.json",
+  "title": "GroundClock Temporal Context v0",
+  "description": "A consistent, timezone-aware, provenance-tagged notion of 'now' supplied to an LLM.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "instant",
+    "timezone",
+    "local_time",
+    "utc_offset",
+    "weekday",
+    "sequence",
+    "provenance"
+  ],
+  "properties": {
+    "instant": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Reference instant in UTC (RFC 3339)."
+    },
+    "timezone": {
+      "type": "string",
+      "description": "IANA timezone name, e.g. America/New_York."
+    },
+    "local_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "instant rendered in timezone (RFC 3339 with offset)."
+    },
+    "utc_offset": {
+      "type": "string",
+      "pattern": "^[+-][0-9]{2}:[0-9]{2}$",
+      "description": "Offset of local_time from UTC at instant."
+    },
+    "weekday": {
+      "type": "string",
+      "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monotonic counter within a session."
+    },
+    "provenance": {
+      "type": "string",
+      "enum": ["system_clock", "injected", "tool", "unknown"]
+    },
+    "knowledge_cutoff": {
+      "type": ["string", "null"],
+      "description": "Model training cutoff, held separately from instant."
+    }
+  }
+}

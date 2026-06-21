@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "groundclock"
+version = "0.1.0"
+description = "A temporal grounding layer for LLMs, plus NowBench — a benchmark that measures whether a model uses the injected current date/time."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Thamilvendhan Munirathinam", email = "mthamil107@gmail.com" }]
+keywords = ["llm", "temporal-grounding", "benchmark", "claude", "agents", "datetime"]
+
+dependencies = [
+  "tzdata; platform_system == 'Windows'",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.40"]
+dev = ["pytest>=8", "jsonschema>=4", "mypy>=1.8", "ruff>=0.6"]
+
+[project.scripts]
+groundclock = "groundclock.cli:main"
+nowbench = "nowbench.runner:main"
+
+[project.urls]
+Homepage = "https://github.com/groundclock/groundclock"
+Spec = "https://github.com/groundclock/groundclock/blob/main/docs/spec/v0.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/groundclock", "src/nowbench"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src"]

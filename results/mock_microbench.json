@@ -1,0 +1,53 @@
+{
+  "baseline": {
+    "condition": "baseline",
+    "n_gold": 20,
+    "n_probe": 3,
+    "alignment": 0.0,
+    "usage_rate": 0.0,
+    "calibration": 1.0,
+    "consistency": 0.0,
+    "tool_calls": 0,
+    "per_family": {
+      "consistency": 0.0,
+      "deadline": 0.0,
+      "present_date": 0.0,
+      "relative_date": 0.0,
+      "timezone_now": 0.0
+    }
+  },
+  "grounded": {
+    "condition": "grounded",
+    "n_gold": 20,
+    "n_probe": 3,
+    "alignment": 0.4,
+    "usage_rate": 0.4,
+    "calibration": 1.0,
+    "consistency": 0.5,
+    "tool_calls": 0,
+    "per_family": {
+      "consistency": 0.5,
+      "deadline": 0.75,
+      "present_date": 0.5,
+      "relative_date": 0.0,
+      "timezone_now": 0.25
+    }
+  },
+  "tool": {
+    "condition": "tool",
+    "n_gold": 20,
+    "n_probe": 3,
+    "alignment": 0.4,
+    "usage_rate": 0.4,
+    "calibration": 1.0,
+    "consistency": 0.5,
+    "tool_calls": 18,
+    "per_family": {
+      "consistency": 0.5,
+      "deadline": 0.75,
+      "present_date": 0.5,
+      "relative_date": 0.0,
+      "timezone_now": 0.25
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "get_current_time",
+  "description": "Return the current date and time as a structured, timezone-aware temporal context. Call this whenever the answer depends on the current date or time (today's date, what day of the week it is, relative dates like 'in 3 days', deadlines, or time in another timezone). Do not answer time-sensitive questions from training knowledge.",
+  "input_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "timezone": {
+        "type": "string",
+        "description": "Optional IANA timezone name to express the time in, e.g. 'Asia/Tokyo'. Defaults to the session timezone."
+      }
+    },
+    "required": []
+  }
+}

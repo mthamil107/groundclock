@@ -1,0 +1,53 @@
+{
+  "baseline": {
+    "condition": "baseline",
+    "n_gold": 20,
+    "n_probe": 3,
+    "alignment": 0.15,
+    "usage_rate": 0.15,
+    "calibration": 0.0,
+    "consistency": 0.0,
+    "tool_calls": 0,
+    "per_family": {
+      "consistency": 0.0,
+      "deadline": 0.75,
+      "present_date": 0.0,
+      "relative_date": 0.0,
+      "timezone_now": 0.0
+    }
+  },
+  "grounded": {
+    "condition": "grounded",
+    "n_gold": 20,
+    "n_probe": 3,
+    "alignment": 1.0,
+    "usage_rate": 1.0,
+    "calibration": 0.0,
+    "consistency": 1.0,
+    "tool_calls": 0,
+    "per_family": {
+      "consistency": 1.0,
+      "deadline": 1.0,
+      "present_date": 1.0,
+      "relative_date": 1.0,
+      "timezone_now": 1.0
+    }
+  },
+  "tool": {
+    "condition": "tool",
+    "n_gold": 20,
+    "n_probe": 3,
+    "alignment": 1.0,
+    "usage_rate": 1.0,
+    "calibration": 0.0,
+    "consistency": 1.0,
+    "tool_calls": 24,
+    "per_family": {
+      "consistency": 1.0,
+      "deadline": 1.0,
+      "present_date": 1.0,
+      "relative_date": 1.0,
+      "timezone_now": 1.0
+    }
+  }
+}
