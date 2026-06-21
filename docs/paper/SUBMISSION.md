@@ -69,4 +69,5 @@ cannot self-endorse.
 - [ ] Title matches the rendered PDF title exactly.
 - [ ] Abstract field is ASCII, no em-dash, no smart quotes, no `$...$`.
 - [ ] Real results committed (or the paper/post states results are forthcoming).
+- [x] Citations verified against arXiv (2026-06-21); fixed one mislabeled entry (patqa2025 -> shah2025cutoff).
 - [ ] `claim-verify` pass on any launch post that cites repo features (see CLAIMS.md).

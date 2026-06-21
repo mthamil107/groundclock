@@ -48,8 +48,9 @@ faculty/personal page, and ask respectfully (one at a time).
 - **Wenhu Chen** (Univ. of Waterloo) — author of TimeQA (the time-sensitive QA dataset you cite); very active cs.CL author.
 - **Hwee Tou Ng** / **Qingyu Tan** / **Lidong Bing** — authors of TempReason (temporal reasoning benchmark you cite).
 - **Jeffrey Cheng** et al. — authors of "Dated Data: Tracing Knowledge Cutoffs" (cited).
-- Authors of the temporal-blindness / present-anchored-QA papers in `groundclock.bib` — once you
-  confirm the real author names (see the citation-verification TODO), they are topically ideal.
+- **Temporal-blindness paper authors** (most on-topic) — *Your LLM Agents are Temporally Blind*
+  (arXiv 2510.23853): Yize Cheng, Soheil Feizi, et al. (Univ. of Maryland group).
+- **SPAN cross-calendar paper authors** (arXiv 2511.09993): Zhongjian Miao, Hao Fu, Chen Wei.
 
 **cs.CR (your account default) — if you lead with the threat-model framing:**
 - Any security researcher you have a real connection with who publishes on arXiv cs.CR. The

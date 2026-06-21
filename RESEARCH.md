@@ -32,10 +32,13 @@ knowledge cutoff is a separate fixed value.
 - **Reported cutoffs are unreliable; effective cutoffs vary by topic** ("Dated Data"):
   Llama-3-70B ~54% on 2017 facts vs ~6% on 1995 facts. — https://arxiv.org/abs/2403.12958
 - **Temporal QA largely unsolved:** TimeQA best model 46% vs human 87%
-  (https://arxiv.org/abs/2108.06314); present-anchored temporal QA (PATQA) 1.5–16% EM
-  (https://arxiv.org/html/2504.00042v2); cross-calendar SPAN ~34.5% avg, none above 80%
-  (https://arxiv.org/pdf/2511.09993). TempReason / time-sensitive QA motivation:
-  https://arxiv.org/abs/2306.08952 , https://arxiv.org/pdf/2402.11034
+  (https://arxiv.org/abs/2108.06314); cross-calendar SPAN — Miao, Fu, Wei 2025
+  (https://arxiv.org/abs/2511.09993). TempReason / time-sensitive QA motivation:
+  https://arxiv.org/abs/2306.08952
+  - **Citation correction (verified 2026-06-21):** arXiv 2504.00042 is *not* a "present-anchored
+    QA" paper — it is "Beyond the Reported Cutoff: Where LLMs Fall Short on Financial Knowledge"
+    (Shah et al. 2025), a domain knowledge-cutoff study. The earlier "PATQA 1.5–16% EM" label was a
+    research-pass error and has been removed; the paper cites 2504.00042 correctly as a cutoff study.
 - **Temporal blindness (KEY):** even with injected timestamps, models largely ignore them —
   no model above ~65% alignment, timestamps in <4% of reasoning traces; deadline closure
   0.04 inferred vs 0.32 injected. — https://arxiv.org/pdf/2511.09993 , https://arxiv.org/html/2510.23853v2

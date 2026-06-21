@@ -18,6 +18,12 @@ Verify before posting. Status from the autopilot build.
 | "calibration uniformly absent across models" | VERIFIED | calibration = 0.00 in all four result files |
 | Real `claude-opus-4-8` numbers | NEEDS RUN | no `ANTHROPIC_API_KEY`; paper presents the OpenAI models as the real runs and does NOT cite Claude numbers |
 
-**Recommendation:** POST AS DRAFTED. The paper now reports a real four-model run. Do not imply Claude
-numbers until that run exists. The non-monotonic timezone result and universal calibration failure
-are the paper's sharpest honest findings.
+**Citations:** All 6 arXiv IDs verified against arXiv on 2026-06-21. Five were correct (titles/authors
+cleaned up); one was mislabeled — `patqa2025` (arXiv 2504.00042) is *not* "present-anchored QA" but
+"Beyond the Reported Cutoff: …Financial Knowledge" (Shah et al. 2025); corrected to `shah2025cutoff`
+and re-cited as a knowledge-cutoff study. The 3 non-arXiv refs (Anthropic docs, GPT-5.5 leak,
+Willison blog) are web sources.
+
+**Recommendation:** POST AS DRAFTED. The paper now reports a real four-model run with verified
+citations. Do not imply Claude numbers until that run exists. The non-monotonic timezone result and
+universal calibration failure are the paper's sharpest honest findings.

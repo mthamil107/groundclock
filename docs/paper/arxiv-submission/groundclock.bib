@@ -1,6 +1,26 @@
+@misc{chen2021timeqa,
+  title        = {A Dataset for Answering Time-Sensitive Questions},
+  author       = {Chen, Wenhu and Wang, Xinyi and Wang, William Yang},
+  year         = {2021},
+  eprint       = {2108.06314},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  note         = {Introduces TimeQA; large gap between model and human performance.}
+}
+
+@misc{tan2023tempreason,
+  title        = {Towards Benchmarking and Improving the Temporal Reasoning Capability of Large Language Models},
+  author       = {Tan, Qingyu and Ng, Hwee Tou and Bing, Lidong},
+  year         = {2023},
+  eprint       = {2306.08952},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  note         = {Introduces TempReason.}
+}
+
 @misc{cheng2024dated,
   title        = {Dated Data: Tracing Knowledge Cutoffs in Large Language Models},
-  author       = {Cheng, Jeffrey and others},
+  author       = {Cheng, Jeffrey and Marone, Marc and Weller, Orion and Lawrie, Dawn and Khashabi, Daniel and Van Durme, Benjamin},
   year         = {2024},
   eprint       = {2403.12958},
   archivePrefix= {arXiv},
@@ -8,52 +28,34 @@
   note         = {Effective knowledge cutoffs differ from reported cutoffs and vary by topic.}
 }
 
-@misc{chen2021timeqa,
-  title        = {A Dataset for Answering Time-Sensitive Questions (TimeQA)},
-  author       = {Chen, Wenhu and Wang, Xinyi and Wang, William Yang},
-  year         = {2021},
-  eprint       = {2108.06314},
-  archivePrefix= {arXiv},
-  primaryClass = {cs.CL}
-}
-
-@misc{tan2023tempreason,
-  title        = {Towards Benchmarking and Improving the Temporal Reasoning Capability of Large Language Models (TempReason)},
-  author       = {Tan, Qingyu and Ng, Hwee Tou and Bing, Lidong},
-  year         = {2023},
-  eprint       = {2306.08952},
-  archivePrefix= {arXiv},
-  primaryClass = {cs.CL}
-}
-
-@misc{patqa2025,
-  title        = {Present-Anchored Temporal Question Answering},
-  author       = {Anonymous},
+@misc{shah2025cutoff,
+  title        = {Beyond the Reported Cutoff: Where Large Language Models Fall Short on Financial Knowledge},
+  author       = {Shah, Agam and Ye, Liqin and Jaskowski, Sebastian and Xu, Wei and Chava, Sudheer},
   year         = {2025},
   eprint       = {2504.00042},
   archivePrefix= {arXiv},
   primaryClass = {cs.CL},
-  note         = {Questions whose answer depends on the present moment; low exact-match scores.}
+  note         = {Domain knowledge falls short of the reported cutoff; complements Dated Data.}
 }
 
 @misc{span2025,
-  title        = {Cross-Calendar Temporal Reasoning and Tool-Augmented Time Agents (SPAN)},
-  author       = {Anonymous},
+  title        = {SPAN: Benchmarking and Improving Cross-Calendar Temporal Reasoning of Large Language Models},
+  author       = {Miao, Zhongjian and Fu, Hao and Wei, Chen},
   year         = {2025},
   eprint       = {2511.09993},
   archivePrefix= {arXiv},
   primaryClass = {cs.CL},
-  note         = {Reports low no-tool accuracy and large recovery from a clock tool.}
+  note         = {Cross-calendar temporal reasoning benchmark; tool/agent augmentation improves accuracy.}
 }
 
 @misc{blindness2025,
-  title        = {Temporal Blindness in LLM Agents: Under-Use of Injected Timestamps},
-  author       = {Anonymous},
+  title        = {Your LLM Agents are Temporally Blind: The Misalignment Between Tool Use Decisions and Human Time Perception},
+  author       = {Cheng, Yize and Soltani Moakhar, Arshia and Fan, Chenrui and Hosseini, Parsa and Faghih, Kazem and Sodagar, Zahra and Wang, Wenxiao and Feizi, Soheil},
   year         = {2025},
   eprint       = {2510.23853},
   archivePrefix= {arXiv},
   primaryClass = {cs.CL},
-  note         = {Injected temporal information is frequently ignored by agents.}
+  note         = {Agents under-use injected temporal information relative to human time perception.}
 }
 
 @misc{anthropic_sysprompt,

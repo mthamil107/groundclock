@@ -74,9 +74,9 @@ runnable Claude (\texttt{claude-opus-4-8}) backend.
 \textbf{Models are stateless and frozen.} Weights do not change after training; a call retains
 nothing from a prior call, so the model has no inherent ``now''. \textbf{Knowledge cutoff is not a
 clock,} and reported cutoffs are unreliable---effective cutoffs vary by topic
-\cite{cheng2024dated}. \textbf{Date is supplied by injection} \cite{anthropic_sysprompt,gpt55leak}.
+\cite{cheng2024dated,shah2025cutoff}. \textbf{Date is supplied by injection} \cite{anthropic_sysprompt,gpt55leak}.
 \textbf{Temporal reasoning is hard}: TimeQA \cite{chen2021timeqa}, TempReason
-\cite{tan2023tempreason}, present-anchored QA \cite{patqa2025}, and cross-calendar reasoning
+\cite{tan2023tempreason}, and cross-calendar reasoning
 \cite{span2025} report large gaps to humans, but measure \emph{knowledge}, not \emph{use} of an
 injected now.
 
@@ -153,9 +153,10 @@ local$=$UTC invariant and DST-correct offsets; stale/replayed now (CWE-294 analo
 monotonic \texttt{sequence}. Clock-source compromise is delegated to host hardening.
 
 \section{Related Work}
-Temporal-knowledge benchmarks \cite{chen2021timeqa,tan2023tempreason,patqa2025,span2025} measure
-what models know; ``Dated Data'' \cite{cheng2024dated} shows reported cutoffs are unreliable;
-temporal-blindness studies \cite{span2025,blindness2025} show injected time is under-used.
+Temporal-knowledge benchmarks \cite{chen2021timeqa,tan2023tempreason,span2025} measure
+what models know; ``Dated Data'' \cite{cheng2024dated} and domain-cutoff studies
+\cite{shah2025cutoff} show reported cutoffs are unreliable; the temporal-blindness study
+\cite{blindness2025} shows injected time is under-used.
 GroundClock is complementary: it assumes injection and tools exist and supplies the missing
 piece---a benchmark scoring whether the injected time is \emph{used}, plus a reference layer.
 

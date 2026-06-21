@@ -63,7 +63,7 @@ retains nothing from a prior call. Consequently the model has no inherent "now".
 
 **Knowledge cutoff is not a clock.** A model's training data ends at some point; this bounds what
 it can know, but says nothing about the current date. Reported cutoffs are moreover unreliable:
-*effective* cutoffs vary by topic and often precede the reported date \cite{cheng2024dated}.
+*effective* cutoffs vary by topic and often precede the reported date \cite{cheng2024dated, shah2025cutoff}.
 
 **Date is supplied by injection.** Deployed systems paste the current date/time/timezone into the
 system prompt each request; provider documentation and leaked system prompts make the mechanism
@@ -71,8 +71,8 @@ explicit \cite{anthropic_sysprompt, gpt55leak, willison_claude4}. The knowledge 
 separately.
 
 **Temporal reasoning is hard and largely unsolved.** Benchmarks of temporal *knowledge* and
-reasoning — TimeQA \cite{chen2021timeqa}, TempReason \cite{tan2023tempreason}, present-anchored
-temporal QA \cite{patqa2025}, and cross-calendar reasoning \cite{span2025} — report large gaps to
+reasoning — TimeQA \cite{chen2021timeqa}, TempReason \cite{tan2023tempreason}, and cross-calendar
+reasoning \cite{span2025} — report large gaps to
 human performance. These measure what the model *knows*; they do not isolate whether an injected
 *now* is used.
 
@@ -188,9 +188,9 @@ hardening. The full model is in the repository.
 ## 6. Related work
 
 Temporal-knowledge benchmarks (TimeQA \cite{chen2021timeqa}, TempReason \cite{tan2023tempreason},
-present-anchored QA \cite{patqa2025}, cross-calendar SPAN \cite{span2025}) measure what models
-know about time; "Dated Data" \cite{cheng2024dated} shows reported cutoffs are unreliable.
-Temporal-blindness studies \cite{span2025, blindness2025} document that injected time is
+cross-calendar SPAN \cite{span2025}) measure what models know about time; "Dated Data"
+\cite{cheng2024dated} and domain-cutoff studies \cite{shah2025cutoff} show reported cutoffs are
+unreliable. The temporal-blindness study \cite{blindness2025} documents that injected time is
 under-used. Tool-augmentation work shows a clock tool recovers much of the gap. GroundClock is
 complementary: it assumes injection and tools exist, and supplies the missing piece — a benchmark
 that scores whether the injected time is *used*, plus a reference layer to inject it consistently.
