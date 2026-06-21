@@ -172,6 +172,12 @@ clock and two surfaces; NowBench measures whether it is used, honestly. The cont
 new algorithm but a benchmark-and-reference pairing that turns temporal blindness into a number you
 can track.
 
+\section*{Reproducibility}
+Code, spec, JSON Schema, threat model, and the full harness (offline mock plus OpenAI and Anthropic
+backends) are at \url{https://github.com/mthamil107/groundclock}. \texttt{pytest},
+\texttt{scripts/verify\_spec.py}, and \texttt{scripts/run\_microbench.py} reproduce the offline
+results; \texttt{nowbench run --provider openai --model <id>} reproduces the model runs.
+
 \bibliographystyle{plain}
 \bibliography{groundclock}
 

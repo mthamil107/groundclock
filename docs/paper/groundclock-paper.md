@@ -213,6 +213,7 @@ blindness" from an anecdote into a number you can track.
 
 ## Reproducibility
 
-Code, spec, schema, threat model, and harness: see the repository. `python -m pytest`,
-`python scripts/verify_spec.py`, and `python scripts/run_microbench.py` reproduce the offline
-results; `nowbench run --provider anthropic --model claude-opus-4-8` reproduces the real run.
+Code, spec, schema, threat model, and harness: <https://github.com/mthamil107/groundclock>.
+`python -m pytest`, `python scripts/verify_spec.py`, and `python scripts/run_microbench.py`
+reproduce the offline results; `nowbench run --provider openai --model <id>` reproduces the
+model runs.

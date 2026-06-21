@@ -26,7 +26,7 @@
 > injecting the time helps, but timezone reasoning remains a failure that is non-monotonic in model
 > tier (a smaller model beats two larger ones), and calibration is uniformly absent — no model
 > abstains when given no clock. The code and a short paper are open-source:
-> https://github.com/mthamil107
+> https://github.com/mthamil107/groundclock
 >
 > If you're willing, arXiv's endorsement page is **https://arxiv.org/auth/endorse?x=[CODE]**. I'd be
 > happy to send the PDF first if that helps you decide, and I completely understand if you'd prefer
