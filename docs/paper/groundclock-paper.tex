@@ -143,7 +143,7 @@ closes the gap (tool $1.00$ for three of four; $0.90$ for gpt-4.1) \cite{span202
 calibration is $0$ for every model}---on no-clock probes none ever abstains, each confabulating a
 date in all cases. \textbf{Caveats:} four models, small suite; we cannot fully exclude provider-side
 date injection, but failing frozen-date items and confabulating probes are consistent with none.
-Reproduce: \texttt{nowbench run --provider openai --model <id>}.
+Reproduce: \texttt{nowbench run -{}-provider openai -{}-model <id>}.
 
 \section{Threat Model (condensed)}
 The authoritative time source is the host \texttt{Clock}; anything read from the conversation is
@@ -177,7 +177,7 @@ can track.
 Code, spec, JSON Schema, threat model, and the full harness (offline mock plus OpenAI and Anthropic
 backends) are at \url{https://github.com/mthamil107/groundclock}. \texttt{pytest},
 \texttt{scripts/verify\_spec.py}, and \texttt{scripts/run\_microbench.py} reproduce the offline
-results; \texttt{nowbench run --provider openai --model <id>} reproduces the model runs.
+results; \texttt{nowbench run -{}-provider openai -{}-model <id>} reproduces the model runs.
 
 \bibliographystyle{plain}
 \bibliography{groundclock}
