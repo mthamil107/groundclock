@@ -50,17 +50,19 @@ Country:     India
 
 ## Primary category
 
-Your arXiv account default is **cs.CR**. For this paper the best fit is **cs.CL** (it is an
-LLM/benchmark paper); cs.CR is reasonable as a cross-list because of the threat-model section, but
-cs.CR moderators may reclassify a benchmark paper. Recommendation:
+The author is **already established in cs.CR** (3 prior papers), so a cs.CR submission needs **no
+endorsement**, whereas cs.CL does. Recommended route — avoids the cs.CL endorsement gate:
 
 ```
-Primary:     cs.CL          (switch from your cs.CR default on the submission form)
-Cross-list:  cs.CR, cs.AI
+Primary:     cs.CR          (no endorsement needed; the threat-model section justifies it)
+Cross-list:  cs.CL, cs.AI   (cross-lists are moderator-reviewed, NOT endorsement-gated)
 ```
 
-If you prefer the security framing to lead, keeping **cs.CR** primary with cs.CL + cs.AI cross-lists
-is acceptable — just expect possible moderator reclassification toward cs.CL.
+This lands the paper in the cs.CL listing without a cs.CL endorser. Caveats: (1) if cs.CR still
+asks for endorsement, the 3 papers are likely < 3 months old (outside arXiv's "established"
+window) and an endorser is needed anyway; (2) cross-lists are subject to moderation. If you instead
+want **cs.CL primary**, you need a cs.CL endorsement (code VV3QKS) from another qualified user — you
+cannot self-endorse.
 
 ## Pre-submission checklist
 - [ ] `python scripts/build_arxiv.py` succeeds (< 50 MB).
