@@ -31,6 +31,8 @@ _BLOCK_TZ_RE = re.compile(r"Timezone:\s*([A-Za-z]+/[A-Za-z_]+)")
 _TZ_RE = re.compile(r"\b([A-Za-z]+/[A-Za-z_]+)\b")
 _NDAYS_RE = re.compile(r"(\d+)\s+days?\s+from")
 _DUE_RE = re.compile(r"due(?:\s+on)?\s+(\d{4}-\d{2}-\d{2})")
+_SPOOF_RE = re.compile(r"today is (\d{4}-\d{2}-\d{2})")  # adversarial in-context date claim
+_CTX_RE = re.compile(r"<temporal_context>.*?</temporal_context>", re.DOTALL)
 
 _ABSTAIN = "I don't have access to the current date or time, so I cannot determine that."
 
@@ -51,20 +53,26 @@ class MockProvider(Provider):
     @staticmethod
     def _available_clock(
         system: str,
+        user: str,
         tools: list[dict[str, object]] | None,
         tool_handler: ToolHandler | None,
     ) -> tuple[datetime | None, str, int]:
-        """Return (UTC instant, session tz, tool_calls) for the clock this condition exposes."""
+        """Return (UTC instant, session tz, tool_calls) for the authoritative clock exposed.
+
+        Searches the tool result, then the system prompt, then the user turn -- so it finds the
+        temporal-context block wherever it is injected (the injection-position ablation).
+        """
         if tools and tool_handler is not None:
             result = tool_handler({})
             m = _INSTANT_RE.search(result)
             if m:
                 tzm = _JSON_TZ_RE.search(result)
                 return datetime.fromisoformat(m.group(1)), (tzm.group(1) if tzm else "UTC"), 1
-        m = _BLOCK_INSTANT_RE.search(system)
-        if m:
-            tzm = _BLOCK_TZ_RE.search(system)
-            return datetime.fromisoformat(m.group(1)), (tzm.group(1) if tzm else "UTC"), 0
+        for blob in (system, user):
+            m = _BLOCK_INSTANT_RE.search(blob)
+            if m:
+                tzm = _BLOCK_TZ_RE.search(blob)
+                return datetime.fromisoformat(m.group(1)), (tzm.group(1) if tzm else "UTC"), 0
         return None, "UTC", 0
 
     def complete(
@@ -75,21 +83,32 @@ class MockProvider(Provider):
         tool_handler: ToolHandler | None = None,
     ) -> Turn:
         if self._well_behaved(user):
-            clock, tz, calls = self._available_clock(system, tools, tool_handler)
+            # Well-behaved: trust the authoritative clock (block/tool), ignore any in-context
+            # date claim -- this is what resists a fake-now spoof.
+            clock, tz, calls = self._available_clock(system, user, tools, tool_handler)
             if clock is not None:
                 return Turn(self._answer_from(user, clock, tz), calls, {"mode": "grounded"})
             return Turn(_ABSTAIN, 0, {"mode": "abstain"})
-        # Blind: ignore any clock and confabulate from the stale date.
+        # Blind / over-compliant: if the user turn asserts a date, adopt it (spoof adoption);
+        # otherwise confabulate from the stale training-era date.
+        spoof = _SPOOF_RE.search(user)
+        if spoof:
+            fake = datetime.strptime(spoof.group(1), "%Y-%m-%d").replace(tzinfo=ZoneInfo("UTC"))
+            return Turn(self._answer_from(user, fake, "UTC"), 0, {"mode": "spoofed"})
         return Turn(self._answer_from(user, _STALE_NOW, "UTC"), 0, {"mode": "blind"})
 
     @staticmethod
     def _answer_from(user: str, instant: datetime, session_tz: str) -> str:
-        u = user.lower()
+        # Strip any injected temporal-context block so question parsing (e.g. the target
+        # timezone) isn't confused by the block's own session timezone -- otherwise the
+        # injection-position ablation would show a spurious mock artifact.
+        question = _CTX_RE.sub(" ", user)
+        u = question.lower()
         # "today" is computed in the session timezone, not UTC.
         local = instant.astimezone(ZoneInfo(session_tz))
 
         # Time in an explicitly-named other timezone.
-        tz_match = _TZ_RE.search(user)
+        tz_match = _TZ_RE.search(question)
         if "time" in u and tz_match and "in " in u:
             other = instant.astimezone(ZoneInfo(tz_match.group(1)))
             return f"The current time in {tz_match.group(1)} is {other:%H:%M}."

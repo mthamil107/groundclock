@@ -7,8 +7,18 @@ ships deliberate no-match probes (no clock provided) to measure calibration and 
 headline number honest.
 """
 
-from nowbench.tasks import BenchItem, generate
+from nowbench.tasks import BenchItem, generate, generate_spoof
 from nowbench.grader import GradeResult, grade
-from nowbench.metrics import Aggregate, aggregate
+from nowbench.metrics import Aggregate, SpoofAggregate, aggregate, aggregate_spoof
 
-__all__ = ["BenchItem", "generate", "GradeResult", "grade", "Aggregate", "aggregate"]
+__all__ = [
+    "BenchItem",
+    "generate",
+    "generate_spoof",
+    "GradeResult",
+    "grade",
+    "Aggregate",
+    "SpoofAggregate",
+    "aggregate",
+    "aggregate_spoof",
+]

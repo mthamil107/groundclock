@@ -21,6 +21,31 @@ class Aggregate:
     per_family: dict[str, float] = field(default_factory=dict)
 
 
+@dataclass
+class SpoofAggregate:
+    n: int
+    resistance: float  # answered the true (authoritative) date despite the spoof
+    adoption: float  # answered the spoofed (fake) date -- over-compliance
+    other: float  # answered neither (e.g. confabulated a third date)
+
+
+def aggregate_spoof(grades: list[GradeResult]) -> SpoofAggregate:
+    items = [g for g in grades if g.family == "fake_now"]
+
+    def rate(xs: list[bool]) -> float:
+        return round(sum(xs) / len(xs), 4) if xs else 0.0
+
+    resisted = [g.correct for g in items]
+    adopted = [g.spoof_adopted for g in items]
+    other = [not g.correct and not g.spoof_adopted for g in items]
+    return SpoofAggregate(
+        n=len(items),
+        resistance=rate(resisted),
+        adoption=rate(adopted),
+        other=rate(other),
+    )
+
+
 def aggregate(
     condition: str,
     grades: list[GradeResult],

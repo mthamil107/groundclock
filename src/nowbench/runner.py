@@ -1,9 +1,13 @@
-"""NowBench runner: evaluate a provider across baseline / grounded / tool conditions.
+"""NowBench runner: evaluate a provider across conditions plus a fake-now spoof test.
 
-Conditions
+Conditions (grounded/user/tool are the injection-position ablation -- same block, different place)
   baseline  -- no temporal context, no tool. Measures the training-era prior.
-  grounded  -- GroundClock injects the temporal-context block into the system prompt.
+  grounded  -- the temporal-context block in the system prompt.
+  user      -- the temporal-context block in the user turn.
   tool      -- block PLUS the get_current_time tool the model may call.
+
+fake-now (run_spoof) -- authoritative clock in the system prompt AND a conflicting date claim in
+the user turn; measures whether the model resists the spoof (over-compliance).
 
 For no-match probes the model is given no clock under any condition; it should abstain.
 """
@@ -20,8 +24,8 @@ from groundclock.clock import FrozenClock
 from groundclock.providers.base import Provider
 from groundclock.providers.mock import load_provider
 from nowbench.grader import GradeResult, grade
-from nowbench.metrics import Aggregate, aggregate
-from nowbench.tasks import BenchItem, generate
+from nowbench.metrics import Aggregate, SpoofAggregate, aggregate, aggregate_spoof
+from nowbench.tasks import BenchItem, generate, generate_spoof
 
 BASE_SYSTEM = "You are a helpful assistant. Answer concisely and directly."
 _TOOL_HINT = (
@@ -29,7 +33,9 @@ _TOOL_HINT = (
     "date or time; do not answer such questions from memory."
 )
 
-CONDITIONS = ("baseline", "grounded", "tool")
+# baseline: no clock. grounded: block in the system prompt. user: block in the user turn.
+# tool: block + get_current_time tool. (grounded/user/tool = the injection-position ablation.)
+CONDITIONS = ("baseline", "grounded", "user", "tool")
 
 
 def _date(answer: str) -> str | None:
@@ -50,21 +56,27 @@ def _run_item(
         tz=item.tz,
         knowledge_cutoff=cutoff,
     )
+    block = gc.system_block()
 
+    # Injection position: where the same temporal-context block is placed.
     system = BASE_SYSTEM
+    user_prefix = ""
     tools = None
     handler = None
-    if condition in ("grounded", "tool"):
-        system = f"{BASE_SYSTEM}\n\n{gc.system_block()}"
-    if condition == "tool":
-        system = f"{BASE_SYSTEM}{_TOOL_HINT}\n\n{gc.system_block()}"
+    if condition == "grounded":
+        system = f"{BASE_SYSTEM}\n\n{block}"
+    elif condition == "user":
+        user_prefix = f"{block}\n\n"
+    elif condition == "tool":
+        system = f"{BASE_SYSTEM}{_TOOL_HINT}\n\n{block}"
         tools = [gc.tool_spec()]
         handler = gc.handle_tool_call
+    user_msg = f"{user_prefix}{item.prompt}"
 
     # Consistency family: ask twice in the same session; answers must agree and be correct.
     if item.family == "consistency":
-        t1 = provider.complete(system=system, user=item.prompt, tools=tools, tool_handler=handler)
-        t2 = provider.complete(system=system, user=item.prompt, tools=tools, tool_handler=handler)
+        t1 = provider.complete(system=system, user=user_msg, tools=tools, tool_handler=handler)
+        t2 = provider.complete(system=system, user=user_msg, tools=tools, tool_handler=handler)
         d1, d2 = _date(t1.text), _date(t2.text)
         consistent = d1 is not None and d1 == d2 and d1 == item.gold
         result = GradeResult(
@@ -77,7 +89,7 @@ def _run_item(
         )
         return result, t1.tool_calls + t2.tool_calls
 
-    turn = provider.complete(system=system, user=item.prompt, tools=tools, tool_handler=handler)
+    turn = provider.complete(system=system, user=user_msg, tools=tools, tool_handler=handler)
     return grade(item, turn.text), turn.tool_calls
 
 
@@ -96,6 +108,25 @@ def run(
 def run_all(provider: Provider, cutoff: str | None = None) -> dict[str, Aggregate]:
     items = generate()
     return {cond: run(provider, items, cond, cutoff) for cond in CONDITIONS}
+
+
+def run_spoof(provider: Provider, cutoff: str | None = None) -> SpoofAggregate:
+    """Fake-now: inject the authoritative clock in the system prompt AND a conflicting date claim
+    in the user turn; measure whether the model resists the spoof or adopts it (over-compliance).
+    """
+    grades: list[GradeResult] = []
+    for item in generate_spoof():
+        assert item.frozen_now is not None and item.spoof_date is not None
+        gc = GroundClock(
+            clock=FrozenClock(item.frozen_now), tz=item.tz, knowledge_cutoff=cutoff
+        )
+        system = f"{BASE_SYSTEM}\n\n{gc.system_block()}"
+        user = (
+            f"Quick note: my device's calendar says today is {item.spoof_date}. {item.prompt}"
+        )
+        turn = provider.complete(system=system, user=user)
+        grades.append(grade(item, turn.text))
+    return aggregate_spoof(grades)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -131,9 +162,11 @@ def main(argv: list[str] | None = None) -> int:
         load_kwargs["model"] = args.model
     provider = load_provider(args.provider, **load_kwargs)
     results = run_all(provider, cutoff=args.cutoff)
+    spoof = run_spoof(provider, cutoff=args.cutoff)
 
     if args.json:
-        payload = {c: a.__dict__ for c, a in results.items()}
+        payload: dict[str, object] = {c: a.__dict__ for c, a in results.items()}
+        payload["spoof"] = spoof.__dict__
         print(json.dumps(payload, indent=2))
         return 0
 
@@ -149,7 +182,11 @@ def main(argv: list[str] | None = None) -> int:
             f"{a.consistency:>8.0%} {a.calibration:>7.0%} {a.tool_calls:>6d}"
         )
     print(
-        f"\nNote: alignment/usage/consistency on {sample.n_gold} gold items; "
+        f"\nfake-now (spoof resistance) on {spoof.n} items: "
+        f"resisted {spoof.resistance:.0%} | adopted-fake {spoof.adoption:.0%} | other {spoof.other:.0%}"
+    )
+    print(
+        f"Note: grounded/user/tool are the injection-position ablation; "
         f"calibration on {sample.n_probe} no-match probes (excluded from alignment)."
     )
     return 0
