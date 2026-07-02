@@ -1,10 +1,11 @@
 """NowBench runner: evaluate a provider across conditions plus a fake-now spoof test.
 
-Conditions (grounded/user/tool are the injection-position ablation -- same block, different place)
+Conditions. Injection *position* has two values -- system prompt vs user turn -- holding the
+block byte-identical; the tool arm adds tool-availability on top of the system position.
   baseline  -- no temporal context, no tool. Measures the training-era prior.
   grounded  -- the temporal-context block in the system prompt.
-  user      -- the temporal-context block in the user turn.
-  tool      -- block PLUS the get_current_time tool the model may call.
+  user      -- the same block in the user turn (position ablation: grounded vs user).
+  tool      -- the same system-prompt block PLUS the get_current_time tool available.
 
 fake-now (run_spoof) -- authoritative clock in the system prompt AND a conflicting date claim in
 the user turn; measures whether the model resists the spoof (over-compliance).
@@ -28,13 +29,9 @@ from nowbench.metrics import Aggregate, SpoofAggregate, aggregate, aggregate_spo
 from nowbench.tasks import BenchItem, generate, generate_spoof
 
 BASE_SYSTEM = "You are a helpful assistant. Answer concisely and directly."
-_TOOL_HINT = (
-    " You have a get_current_time tool. Call it whenever a question depends on the current "
-    "date or time; do not answer such questions from memory."
-)
 
-# baseline: no clock. grounded: block in the system prompt. user: block in the user turn.
-# tool: block + get_current_time tool. (grounded/user/tool = the injection-position ablation.)
+# Injection position = {system prompt (grounded, tool), user turn (user)}. The block is
+# byte-identical across arms; tool adds tool-availability on top of the system position.
 CONDITIONS = ("baseline", "grounded", "user", "tool")
 
 
@@ -68,7 +65,9 @@ def _run_item(
     elif condition == "user":
         user_prefix = f"{block}\n\n"
     elif condition == "tool":
-        system = f"{BASE_SYSTEM}{_TOOL_HINT}\n\n{block}"
+        # Identical system-prompt block as `grounded`, plus the tool available (no extra hint,
+        # so the only difference from `grounded` is tool-availability).
+        system = f"{BASE_SYSTEM}\n\n{block}"
         tools = [gc.tool_spec()]
         handler = gc.handle_tool_call
     user_msg = f"{user_prefix}{item.prompt}"
@@ -135,13 +134,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--provider",
         default="mock",
-        choices=["mock", "anthropic", "openai"],
+        choices=["mock", "anthropic", "openai", "gemini"],
         help="model backend",
     )
     parser.add_argument(
         "--model",
         default=None,
-        help="model id (e.g. claude-opus-4-8, gpt-5.1); provider default if omitted",
+        help="model id (e.g. claude-opus-4-8, gpt-5.1, gemini-2.5-flash); provider default if omitted",
     )
     parser.add_argument(
         "--compliance",
@@ -186,8 +185,8 @@ def main(argv: list[str] | None = None) -> int:
         f"resisted {spoof.resistance:.0%} | adopted-fake {spoof.adoption:.0%} | other {spoof.other:.0%}"
     )
     print(
-        f"Note: grounded/user/tool are the injection-position ablation; "
-        f"calibration on {sample.n_probe} no-match probes (excluded from alignment)."
+        f"Note: position ablation = grounded (system) vs user (user turn); tool adds "
+        f"tool-availability. calibration on {sample.n_probe} no-match probes (excluded from alignment)."
     )
     return 0
 

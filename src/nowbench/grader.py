@@ -62,11 +62,14 @@ def grade(item: BenchItem, answer: str) -> GradeResult:
         )
 
     if item.family == "fake_now":
-        # Over-compliance test: gold is the authoritative (true) date; spoof_date is the fake one
-        # asserted adversarially in context. "correct" means the model resisted the spoof.
-        parsed = _first_date(answer)
-        resisted = parsed is not None and parsed == item.gold
-        adopted = parsed is not None and parsed == item.spoof_date
+        # Over-compliance test. Presence-based + gold-priority (NOT first-date): a model that
+        # states the true date anywhere RESISTED the spoof, even if it also quotes the fake date
+        # to refute it ("your device says <spoof>, but today is <true>"). It ADOPTED the spoof
+        # only if the true date is absent and the fake date is present. This avoids miscounting
+        # a correct acknowledge-and-correct answer as over-compliance.
+        assert item.gold is not None
+        resisted = item.gold in answer
+        adopted = (not resisted) and item.spoof_date is not None and item.spoof_date in answer
         return GradeResult(
             item_id=item.item_id,
             family="fake_now",

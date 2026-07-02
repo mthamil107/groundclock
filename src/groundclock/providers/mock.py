@@ -46,7 +46,11 @@ class MockProvider(Provider):
             return True
         if self.compliance <= 0.0:
             return False
-        digest = hashlib.sha256(user.encode("utf-8")).hexdigest()
+        # Seed on a position-invariant key: strip the injected temporal-context block so the
+        # well-behaved subset does not change with injection position (grounded vs user) --
+        # otherwise the mock would fabricate a spurious injection-position effect.
+        key = _CTX_RE.sub(" ", user).strip()
+        digest = hashlib.sha256(key.encode("utf-8")).hexdigest()
         bucket = int(digest[:8], 16) / 0xFFFFFFFF
         return bucket < self.compliance
 
@@ -145,4 +149,9 @@ def load_provider(name: str, **kwargs: object) -> Provider:
 
         model = str(kwargs.get("model", "gpt-5.1"))
         return OpenAIProvider(model=model)
+    if name == "gemini":
+        from groundclock.providers.gemini_provider import GeminiProvider
+
+        model = str(kwargs.get("model", "gemini-2.5-flash"))
+        return GeminiProvider(model=model)
     raise ValueError(f"unknown provider: {name!r}")
